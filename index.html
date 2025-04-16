@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>南隘國小 今日營養午餐查詢</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      padding: 20px;
+      background-color: #f2f8fc;
+    }
+    h1 {
+      text-align: center;
+      color: #005187;
+    }
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .dish {
+      width: 180px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 10px;
+      text-align: center;
+    }
+    .dish img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .dish h2 {
+      font-size: 16px;
+      margin: 10px 0 0;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>南隘國小 今日營養午餐</h1>
+  <div id="menu" class="menu"></div>
+
+  <script>
+    const schoolId = '64736034';
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const period = `${yyyy}-${mm}-${dd}`;
+
+    fetch(`https://fatraceschool.k12ea.gov.tw/offered/meal?KitchenId=all&MenuType=1&period=${period}&SchoolId=${schoolId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.length > 0) {
+          const batchDataId = data[0].BatchDataId;
+          return fetch(`https://fatraceschool.k12ea.gov.tw/offered/meal/detail?BatchDataId=${batchDataId}`);
+        } else {
+          throw new Error('今日無供餐資料');
+        }
+      })
+      .then(response => response.json())
+      .then(detail => {
+        const menuDiv = document.getElementById('menu');
+        detail.forEach(item => {
+          const dish = document.createElement('div');
+          dish.className = 'dish';
+          dish.innerHTML = `<img src="${item.PictureUrl}" alt="${item.DishName}"><h2>${item.DishName}</h2>`;
+          menuDiv.appendChild(dish);
+        });
+      })
+      .catch(error => {
+        document.getElementById('menu').innerHTML = `<p style="text-align:center;color:red;">${error.message}</p>`;
+      });
+  </script>
+</body>
+</html>
